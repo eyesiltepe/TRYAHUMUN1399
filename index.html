@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#020617">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Who Wants to Be a Millionaire?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Montserrat:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+
+<div class="stage-vignette" aria-hidden="true"></div>
+
+<!-- ============ WELCOME SCREEN ============ -->
+<div id="welcome" class="screen welcome active">
+  <div class="welcome-broadcast-strip">
+    <span class="strip-live">● ON AIR</span>
+    <span class="strip-title">Columbia University AHUMUN1399_001_2026_1 - COLLOQUIUM ON MAJOR TEXTS</span>
+    <span class="strip-prize-top">Grand prize $1,000,000</span>
+  </div>
+  <div class="welcome-frame">
+    <div class="welcome-corner tl"></div>
+    <div class="welcome-corner tr"></div>
+    <div class="welcome-corner bl"></div>
+    <div class="welcome-corner br"></div>
+    <div class="welcome-logo">WHO WANTS<br><span class="welcome-logo-accent">TO BE A MILLIONAIRE?</span></div>
+    <p class="welcome-subtitle">Collegiate quiz | Millionaire ladder to <strong>$1,000,000</strong> | five lifelines</p>
+    <p class="welcome-modes-intro">Classic is the TV ladder (15 picks from the pool). Full bank plays every question once per run.</p>
+    <div class="start-options">
+      <button type="button" class="btn btn-primary-game" onclick="game.start(&quot;classic&quot;)">Classic | 15 questions</button>
+      <button type="button" class="btn btn-outline-game" onclick="game.start(&quot;study&quot;)">Full bank | <span id="bank-count">...</span> questions</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ GAME SCREEN ============ -->
+<div id="game" class="screen game">
+  <header class="studio-header">
+    <div class="studio-brand">
+      <span class="studio-mark">Columbia University AHUMUN1399_001_2026_1</span>
+      <span class="studio-sub">COLLOQUIUM ON MAJOR TEXTS</span>
+    </div>
+    <div class="studio-badges">
+      <span class="badge-live">● LIVE TAPING</span>
+      <span class="badge-prize">TOP PRIZE <strong>$1,000,000</strong></span>
+    </div>
+  </header>
+  <div class="game-grid">
+    <div class="play-area">
+      <div class="stage-panel">
+      <div class="top-bar">
+        <span class="counter" id="counter">Round 1 / 15</span>
+        <div class="lifelines" role="toolbar" aria-label="Lifelines">
+          <div class="lifeline" id="ll-fifty" onclick="game.useFiftyFifty()" title="50:50 removes two incorrect answers"><span class="lifeline-label">50:50</span></div>
+          <div class="lifeline" id="ll-audience" onclick="game.useAudience()" title="Ask the audience"><span class="lifeline-ico">👥</span><span class="lifeline-sr">Audience</span></div>
+          <div class="lifeline" id="ll-phone" onclick="game.usePhone()" title="Phone a friend"><span class="lifeline-ico">📞</span><span class="lifeline-sr">Phone</span></div>
+          <div class="lifeline lifeline-switch" id="ll-switch" onclick="game.useSwitchQuestion()" title="Switch replaces this question"><span class="lifeline-label">SWITCH</span></div>
+          <div class="lifeline lifeline-clue" id="ll-clue" onclick="game.useHostClue()" title="Host reveals one incorrect answer"><span class="lifeline-label">HOST</span></div>
+        </div>
+        <button class="sound-toggle" id="sound-toggle" type="button" onclick="game.toggleSound()" title="Sound">🔊</button>
+      </div>
+      <div class="question-area">
+        <div class="question-box" id="question-box"></div>
+        <p id="question-source" class="question-source" hidden></p>
+        <div class="answers" id="answers"></div>
+      </div>
+      <div class="footer">
+        <button class="walk-away" id="walk-away-btn" onclick="game.askWalkAway()">TAKE THE MONEY</button>
+      </div>
+      </div>
+    </div>
+    <aside class="ladder-column">
+      <div class="ladder-heading">Money tree</div>
+      <div class="ladder-area" id="ladder"></div>
+    </aside>
+  </div>
+</div>
+
+<!-- ============ END SCREEN ============ -->
+<div id="end" class="screen end">
+  <div class="end-icon" id="end-icon">🏆</div>
+  <h2 id="end-title"></h2>
+  <div class="prize-display" id="end-prize"></div>
+  <p id="end-message"></p>
+  <button class="btn" onclick="location.reload()">PLAY AGAIN</button>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal">
+    <h3>Is that your final answer?</h3>
+    <p id="confirm-text" style="color: var(--orange); font-weight: bold; font-size: 1.2rem;"></p>
+    <p style="font-size: 0.95rem; opacity: 0.85;">If you say yes, your answer will be locked in.</p>
+    <div class="confirm-buttons">
+      <button class="btn btn-yes" onclick="game.confirmAnswer()">YES, FINAL ANSWER</button>
+      <button class="btn btn-no" onclick="game.cancelAnswer()">NO, LET ME THINK</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-walkaway">
+  <div class="modal">
+    <h3>Are you sure you want to walk away?</h3>
+    <p style="font-size: 1.1rem;">You'll leave with <strong style="color: var(--gold); font-size: 1.3em;" id="walkaway-amount"></strong>.</p>
+    <div class="confirm-buttons">
+      <button class="btn btn-yes" onclick="game.confirmWalkAway()">YES, WALK AWAY</button>
+      <button class="btn btn-no" onclick="game.closeModal('modal-walkaway')">NO, KEEP PLAYING</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-audience">
+  <div class="modal">
+    <h3>👥 Audience Poll Results</h3>
+    <div class="audience-bars" id="audience-bars"></div>
+    <button class="btn" onclick="game.closeModal('modal-audience')">CONTINUE</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-phone">
+  <div class="modal">
+    <h3>📞 Your Friend on the Phone</h3>
+    <p id="phone-text" style="font-style: italic; font-size: 1.05rem; line-height: 1.6; color: var(--gold-light); margin: 22px 0;"></p>
+    <button class="btn" onclick="game.closeModal('modal-phone')">CONTINUE</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-clue">
+  <div class="modal">
+    <h3>📺 Host Clue</h3>
+    <p id="clue-text" class="modal-clue-text"></p>
+    <button class="btn" onclick="game.closeModal('modal-clue')">CONTINUE</button>
+  </div>
+</div>
+
+<!-- Questions live in repo root /questions/questions.js (full bank · not a 15-row file) -->
+<script src="../questions/questions.js"></script>
+<script src="audio.js"></script>
+<script src="game.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById('bank-count');
+    if (el && typeof BANK_QUESTION_COUNT === 'number') el.textContent = String(BANK_QUESTION_COUNT);
+  });
+</script>
+</body>
+</html>
